@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 const title = "Election Compass | Understand Registration, Timeline, and Voting Steps";
@@ -14,7 +15,9 @@ export const metadata: Metadata = {
     "voter registration",
     "election timeline",
     "civic education",
-    "google gemini"
+    "google gemini",
+    "google civic information api",
+    "google maps"
   ],
   openGraph: {
     title,
@@ -37,6 +40,8 @@ export const metadata: Metadata = {
   }
 };
 
+const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
@@ -45,6 +50,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Skip to main content
         </a>
         {children}
+        {gaMeasurementId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${gaMeasurementId}', { anonymize_ip: true });`}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );

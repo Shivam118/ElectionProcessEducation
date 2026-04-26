@@ -1,14 +1,23 @@
 # Election Compass (Next.js)
 
-An SEO-optimized and accessible civic education assistant that helps users understand election process timelines, voting steps, and frequently asked questions. It integrates **Google Gemini AI** through a secure server route.
+An SEO-optimized, accessible civic education assistant that helps users understand election process timelines, voting steps, and FAQs. The app now integrates multiple Google services while still using mock data fallbacks when API keys are unavailable.
+
+## Google services included
+
+- **Google Gemini API** for natural-language election Q&A (`/api/assistant`)
+- **Google Civic Information API** for election and polling lookup (`/api/voter-info`)
+- **Google Maps Embed** to visualize polling places
+- **Google Analytics (gtag.js)** for traffic insights (optional)
 
 ## Features
 
-- **Interactive election assistant** powered by Google Gemini (`/api/assistant`)
-- **Mock election data** for timelines, voting steps, and FAQs (no database required)
-- **SEO optimization** with metadata, OpenGraph, Twitter cards, canonical links, robots, sitemap, and structured data
-- **Accessibility support**: semantic sections, labels, skip link, keyboard focus visibility, ARIA live region
-- **Testing** with Vitest + React Testing Library
+- Interactive election assistant with server-side validation (`zod`)
+- Address-based voter guidance panel with polling-place map
+- Mock election data for timeline, checklist, and FAQ (no DB required)
+- SEO coverage: metadata, OpenGraph, Twitter card, robots, sitemap, JSON-LD
+- Security-first defaults: strict headers, CSP, disabled `x-powered-by`
+- Accessibility: semantic sections, skip link, ARIA live regions, visible focus styles
+- Testing with Vitest + React Testing Library
 
 ## Setup
 
@@ -16,27 +25,30 @@ An SEO-optimized and accessible civic education assistant that helps users under
    ```bash
    npm install
    ```
-2. Add environment variables:
+2. Configure environment:
    ```bash
    cp .env.example .env.local
    ```
-3. Run app:
+3. Run locally:
    ```bash
    npm run dev
    ```
 
-## Gemini integration
+## Environment variables
 
-Set `GEMINI_API_KEY` in `.env.local`.
+```bash
+GEMINI_API_KEY=
+GOOGLE_CIVIC_API_KEY=
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+```
 
-If not set, the assistant gracefully returns a fallback guidance message.
+If keys are missing, the app gracefully falls back to mock guidance so demos still work in hackathon environments.
 
-## Quality checklist for high score
+## Verification commands
 
-- Code quality: strict TypeScript, componentized architecture
-- Security: input validation via Zod and server-side AI call
-- Efficiency: lean component tree and static mock data
-- Accessibility: semantic elements, form labels, ARIA status updates
-- Testing: unit tests for data and component behavior
-- Google services: integrated Gemini API SDK
-- Problem alignment: end-to-end election education assistant UX
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```

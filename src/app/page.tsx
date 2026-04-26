@@ -1,5 +1,6 @@
 import { ChatAssistant } from "@/components/ChatAssistant";
 import { FAQSection } from "@/components/FAQSection";
+import { GoogleServicesPanel } from "@/components/GoogleServicesPanel";
 import { StepsChecklist } from "@/components/StepsChecklist";
 import { Timeline } from "@/components/Timeline";
 
@@ -28,6 +29,7 @@ export default function HomePage() {
       <ChatAssistant />
       <Timeline />
       <StepsChecklist />
+      <GoogleServicesPanel />
       <FAQSection />
 
       <script
