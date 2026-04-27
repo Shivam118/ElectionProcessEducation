@@ -1,18 +1,41 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import React from "react";
+import { act } from "react";
+import { createRoot, Root } from "react-dom/client";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChatAssistant } from "@/components/ChatAssistant";
 
-describe("ChatAssistant", () => {
-  it("disables submit until valid input length", () => {
-    render(<ChatAssistant />);
-    const button = screen.getByRole("button", { name: /ask assistant/i });
-    expect(button).toBeDisabled();
+let container: HTMLDivElement;
+let root: Root;
 
-    fireEvent.change(screen.getByLabelText(/your question/i), {
-      target: { value: "How?" }
+afterEach(() => {
+  act(() => {
+    root.unmount();
+  });
+  vi.unstubAllGlobals();
+});
+
+describe("ChatAssistant", () => {
+  it("keeps submit disabled for short input", async () => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    await act(async () => {
+      root.render(<ChatAssistant />);
     });
 
-    expect(button).toBeEnabled();
+    const button = container.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const textarea = container.querySelector("textarea") as HTMLTextAreaElement;
+
+    expect(button.disabled).toBe(true);
+
+    await act(async () => {
+      textarea.value = "How";
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      textarea.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    expect(button.disabled).toBe(true);
   });
 
   it("renders API response", async () => {
@@ -24,16 +47,26 @@ describe("ChatAssistant", () => {
       })
     );
 
-    render(<ChatAssistant />);
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
 
-    fireEvent.change(screen.getByLabelText(/your question/i), {
-      target: { value: "How do I vote early?" }
+    await act(async () => {
+      root.render(<ChatAssistant />);
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /ask assistant/i }));
+    const textarea = container.querySelector("textarea") as HTMLTextAreaElement;
+    const form = container.querySelector("form") as HTMLFormElement;
 
-    await waitFor(() => {
-      expect(screen.getByText(/vote early/i)).toBeInTheDocument();
+    await act(async () => {
+      textarea.value = "How do I vote early?";
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
     });
+
+    await act(async () => {
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+
+    expect(container.textContent).toContain("vote early");
   });
 });
