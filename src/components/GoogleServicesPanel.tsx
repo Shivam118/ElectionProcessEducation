@@ -1,7 +1,14 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { createGoogleMapsEmbedUrl, PollingLocation, VoterInfo } from "@/lib/google-services";
+import {
+  CivicResource,
+  createGoogleCalendarElectionUrl,
+  createGoogleMapsDirectionsUrl,
+  createGoogleMapsEmbedUrl,
+  PollingLocation,
+  VoterInfo
+} from "@/lib/google-services";
 
 type Status = "idle" | "loading" | "error";
 
@@ -12,11 +19,17 @@ export function GoogleServicesPanel() {
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState(initialMessage);
   const [voterInfo, setVoterInfo] = useState<VoterInfo | null>(null);
+  const [resources, setResources] = useState<CivicResource[]>([]);
 
   const mapUrl = useMemo(() => {
     const first: PollingLocation | undefined = voterInfo?.pollingLocations[0];
     return first ? createGoogleMapsEmbedUrl(first) : "";
   }, [voterInfo]);
+  const firstPollingLocation = voterInfo?.pollingLocations[0];
+  const directionsUrl = firstPollingLocation
+    ? createGoogleMapsDirectionsUrl(firstPollingLocation)
+    : "";
+  const electionCalendarUrl = voterInfo ? createGoogleCalendarElectionUrl(voterInfo.election) : "";
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -36,6 +49,19 @@ export function GoogleServicesPanel() {
 
     const data = (await response.json()) as VoterInfo;
     setVoterInfo(data);
+
+    const resourceResponse = await fetch("/api/civic-resources", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: "US elections voting guide" })
+    });
+    if (resourceResponse.ok) {
+      const resourceData = (await resourceResponse.json()) as { resources: CivicResource[] };
+      setResources(resourceData.resources);
+    } else {
+      setResources([]);
+    }
+
     setMessage(`Loaded election guidance for ${data.election.name}.`);
     setStatus("idle");
   };
@@ -89,6 +115,26 @@ export function GoogleServicesPanel() {
               ))}
             </ul>
           </article>
+
+          <article>
+            <h3>Google quick actions</h3>
+            <ul>
+              {directionsUrl && (
+                <li>
+                  <a href={directionsUrl} target="_blank" rel="noreferrer">
+                    Open Google Maps directions to primary polling place
+                  </a>
+                </li>
+              )}
+              {electionCalendarUrl && (
+                <li>
+                  <a href={electionCalendarUrl} target="_blank" rel="noreferrer">
+                    Add election day reminder to Google Calendar
+                  </a>
+                </li>
+              )}
+            </ul>
+          </article>
         </div>
       )}
 
@@ -100,6 +146,22 @@ export function GoogleServicesPanel() {
           referrerPolicy="no-referrer-when-downgrade"
           className="map-frame"
         />
+      )}
+
+      {resources.length > 0 && (
+        <article className="resources-list">
+          <h3>Google Programmable Search: trusted voter resources</h3>
+          <ul>
+            {resources.map((resource) => (
+              <li key={resource.link}>
+                <a href={resource.link} target="_blank" rel="noreferrer">
+                  {resource.title}
+                </a>
+                <p>{resource.snippet}</p>
+              </li>
+            ))}
+          </ul>
+        </article>
       )}
     </section>
   );
